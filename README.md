@@ -46,6 +46,31 @@ An Open Source alternative to dbdiagram.io, aiming to have the same basic featur
 + 25. Added export to DBML, SQL (Postgres, MSSQL, MySQL)
 + 26. Added import from SQL (Postgres)
 
+## Installation
+
+### Install the dependencies
+```bash
+yarn
+```
+
+### Start the app in development mode (hot-code reloading, error reporting, etc.)
+```bash
+quasar dev
+```
+
+### Lint the files
+```bash
+yarn lint
+```
+
+### Build the app for production
+```bash
+quasar build
+```
+
+### Customize the configuration
+See [Configuring quasar.conf.js](https://quasar.dev/quasar-cli/quasar-conf-js).
+
 ## Architecture - Solution
 
 ![Arch](https://raw.githubusercontent.com/NomadRazor/dbdiagram-oss-wrep/master/.github/media/arch.png)
