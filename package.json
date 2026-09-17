@@ -10,7 +10,8 @@
     "build": "quasar build",
     "build:pwa": "quasar build -m pwa",
     "lint": "eslint --ext .js,.ts,.vue ./",
-    "test": "echo \"No test specified\" && exit 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "deploy": "push-dir --dir=dist/spa --branch=gh-pages"
   },
   "dependencies": {
@@ -33,6 +34,8 @@
     "@aws-sdk/types": "^3.391.0",
     "@babel/eslint-parser": "^7.17.0",
     "@quasar/app-webpack": "^3.11.2",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/test-utils": "^2.5.1",
     "dotenv": "^16.0.0",
     "eslint": "^7.14.0",
     "eslint-config-standard": "^16.0.2",
@@ -40,7 +43,10 @@
     "eslint-plugin-node": "^11.0.0",
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-vue": "^7.0.0",
-    "push-dir": "^0.4.1"
+    "jsdom": "^29.1.1",
+    "push-dir": "^0.4.1",
+    "sass": "^1.32.12",
+    "vitest": "^4.1.11"
   },
   "browserslist": [
     "last 10 Chrome versions",
