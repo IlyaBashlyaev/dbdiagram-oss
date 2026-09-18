@@ -40,8 +40,12 @@
             touch.screenX, touch.screenY,
             touch.clientX, touch.clientY, false,
             false, false, false, 0, null);
-        touch.target.dispatchEvent(simulatedEvent);
-        
+        // touch.target stays pinned to the element under the finger at
+        // touchstart and never updates on move/end, so re-resolve the
+        // element under the CURRENT finger position instead of trusting it.
+        var currentTarget = document.elementFromPoint(touch.clientX, touch.clientY) || touch.target;
+        currentTarget.dispatchEvent(simulatedEvent);
+
     };
   onMounted(()=>{
     

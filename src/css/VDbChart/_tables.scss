@@ -58,20 +58,14 @@
 
   &__highlight {
     position: relative;
+
     &::after {
-      overflow: visible;
-      display: block;
+      pointer-events: none;
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       outline: 5px solid #3ea8de;
       content: "";
-      background: red;
-      z-index:90000;
-      width: 500px;
-      height: 500px;
+      z-index: 1;
     }
 
     .db-field__ref {

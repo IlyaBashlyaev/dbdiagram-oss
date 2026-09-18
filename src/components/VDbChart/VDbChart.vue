@@ -72,7 +72,8 @@
         />
       </g>
       <g id="tables-layer"
-         v-if="store.loaded">
+         v-if="store.loaded"
+         @mousedown="redispatchToRealTarget">
         <v-db-table v-for="table of tables"
                     v-bind="table"
                     :useSchema="useSchema"
@@ -447,6 +448,18 @@
   }
 
   function onTableGroupMouseLeave (e) {
+  }
+
+  // Chromium resolves mousedown's e.target to the shared <g id="tables-layer">
+  // container instead of the actual table/header rect under the cursor when
+  // many sibling nested <svg> tables live inside it, so listeners bound on
+  // .db-table-header never receive the bubbled event. Re-resolve the real
+  // element from the click's coordinates (elementFromPoint stays accurate)
+  // and re-dispatch a fresh mousedown there so it bubbles correctly.
+  function redispatchToRealTarget (e) {
+    const real = document.elementFromPoint(e.clientX, e.clientY)
+    if (!real || real === e.target) return
+    real.dispatchEvent(new MouseEvent('mousedown', e))
   }
 
   let lastClick = Date.now();

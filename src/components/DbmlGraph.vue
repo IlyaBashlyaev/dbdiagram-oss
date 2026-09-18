@@ -158,7 +158,7 @@ import { store } from 'quasar/wrappers'
     }
     if (cross_vector[0] || cross_vector[1] || cross_vector[2] || cross_vector[3]){
          update = true;
-         chart.updateTable(index+1,{x:layout[index][0], y:layout[index][1], width:layout[index][2], height:layout[index][3]})
+         chart.updateTable(Number(elements[index]),{x:layout[index][0], y:layout[index][1], width:layout[index][2], height:layout[index][3]})
         }
     }
     

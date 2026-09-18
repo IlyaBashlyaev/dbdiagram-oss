@@ -2,6 +2,20 @@
 import { defineStore } from "pinia";
 import { markRaw } from "vue";
 
+// New tables with no saved position used to all default to the same (0, 0)
+// coordinate, stacking them exactly on top of each other. Cascade them
+// across a grid instead so freshly-imported tables start out distinguishable.
+const NEW_TABLE_COLUMNS = 5;
+const NEW_TABLE_SPACING = { x: 260, y: 220 };
+
+function nextDefaultTablePosition(state) {
+  const index = Object.keys(state.tables).length;
+  return {
+    x: (index % NEW_TABLE_COLUMNS) * NEW_TABLE_SPACING.x,
+    y: Math.floor(index / NEW_TABLE_COLUMNS) * NEW_TABLE_SPACING.y
+  };
+}
+
 export const useChartStore = defineStore("chart", {
   state: () => ({
     zoom: 1.0,
@@ -118,19 +132,17 @@ export const useChartStore = defineStore("chart", {
                  
                   state.tables[tableId] = {};
                   state.tables[tableId][tfn] = {
-                    x: 0,
-                    y: 0,
+                    ...nextDefaultTablePosition(state),
                     width: 220,
                     height: 32
                   };
-                }     
+                }
               }
             }
           } else {
             state.tables[tableId] = {}
             state.tables[tableId][tfn] = {
-              x: 0,
-              y: 0,
+              ...nextDefaultTablePosition(state),
               width: 220,
               height: 32
             };
@@ -341,19 +353,17 @@ export const useChartStore = defineStore("chart", {
                  
                   state.tables[tableId] = {};
                   state.tables[tableId][tfn] = {
-                    x: 0,
-                    y: 0,
+                    ...nextDefaultTablePosition(state),
                     width: 220,
                     height: 32
                   };
-                }     
+                }
               }
             }
           } else {
             state.tables[tableId] = {}
             state.tables[tableId][tfn] = {
-              x: 0,
-              y: 0,
+              ...nextDefaultTablePosition(state),
               width: 220,
               height: 32
             };
