@@ -170,18 +170,28 @@
     dragging.value = false
   }
 
+  // clientX/clientY are viewport-relative and stable regardless of which
+  // child element the cursor is over; offsetX/offsetY are relative to
+  // event.target instead, which changes as the mouse crosses table rects,
+  // header text, other tables and the canvas background, breaking the drag.
+  const containerPoint = (clientX, clientY) => {
+    const rect = props.containerRef.getBoundingClientRect()
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    }
+  }
+
   const drag = ({
-    offsetX,
-    offsetY
+    clientX,
+    clientY
   }) => {
-    const p = store.inverseCtm.transformPoint({
-      x: offsetX,
-      y: offsetY
-    })
+    console.log(`Move.  Table ${props.id}`)
+    const p = store.inverseCtm.transformPoint(containerPoint(clientX, clientY))
     state.value.x = snap(p.x - dragOffsetX.value, gridSnap)
     state.value.y = snap(p.y - dragOffsetY.value, gridSnap)
     emit('update:position', state.value)
-    
+
   }
   const drop = (e) => {
     dragging.value = false
@@ -194,15 +204,13 @@
     props.containerRef.removeEventListener('mouseleave', onMouseLeave, { passive: true })
   }
   const startDrag = ({
-    offsetX,
-    offsetY
+    clientX,
+    clientY
   }) => {
+    console.log(`Click. Table ${props.id}`)
     dragging.value = true
 
-    const p = store.inverseCtm.transformPoint({
-      x: offsetX,
-      y: offsetY
-    })
+    const p = store.inverseCtm.transformPoint(containerPoint(clientX, clientY))
     dragOffsetX.value = p.x - state.value.x
     dragOffsetY.value = p.y - state.value.y
 

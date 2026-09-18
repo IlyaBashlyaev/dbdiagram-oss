@@ -4,10 +4,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import VDbTable from '../components/VDbChart/VDbTable.vue'
 import { useChartStore } from '../store/chart'
 
-function fireMouseEvent(el, type, { offsetX = 0, offsetY = 0 } = {}) {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true })
-  Object.defineProperty(event, 'offsetX', { get: () => offsetX })
-  Object.defineProperty(event, 'offsetY', { get: () => offsetY })
+function fireMouseEvent(el, type, { clientX = 0, clientY = 0 } = {}) {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX, clientY })
   el.dispatchEvent(event)
 }
 
@@ -24,6 +22,10 @@ function mountTable() {
   // real EventTarget, which is all startDrag()/drag()/drop() need from it.
   const containerRef = document.createElement('div')
   containerRef.createSVGPoint = () => ({})
+  // startDrag()/drag() convert clientX/clientY to container-local coordinates
+  // via getBoundingClientRect(); jsdom has no layout engine, so pin it at
+  // (0,0) to keep clientX/clientY numerically equal to the local point.
+  containerRef.getBoundingClientRect = () => ({ left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 })
 
   // seed the table entry the same way loadDatabase() does — VDbTable's own
   // `state` computed calls getTable(id) with no schema/tablename, which only
@@ -63,12 +65,12 @@ describe('drag-and-drop', () => {
 
     const header = wrapper.find('.db-table-header')
     // grab the entity 20px right / 15px down from its top-left corner
-    fireMouseEvent(header.element, 'mousedown', { offsetX: 120, offsetY: 65 })
+    fireMouseEvent(header.element, 'mousedown', { clientX: 120, clientY: 65 })
     await wrapper.vm.$nextTick()
     expect(wrapper.classes()).toContain('db-table__dragging')
 
     // move the mouse by (+50, +30)
-    fireMouseEvent(containerRef, 'mousemove', { offsetX: 170, offsetY: 95 })
+    fireMouseEvent(containerRef, 'mousemove', { clientX: 170, clientY: 95 })
     await wrapper.vm.$nextTick()
 
     expect(table.x).toBe(150) // moved by the same delta as the mouse
@@ -89,14 +91,14 @@ describe('drag-and-drop', () => {
     table.y = 50
     await wrapper.vm.$nextTick()
 
-    fireMouseEvent(wrapper.find('.db-table-header').element, 'mousedown', { offsetX: 120, offsetY: 65 })
-    fireMouseEvent(containerRef, 'mousemove', { offsetX: 170, offsetY: 95 })
+    fireMouseEvent(wrapper.find('.db-table-header').element, 'mousedown', { clientX: 120, clientY: 65 })
+    fireMouseEvent(containerRef, 'mousemove', { clientX: 170, clientY: 95 })
     fireMouseEvent(containerRef, 'mouseup', {})
     await wrapper.vm.$nextTick()
     expect(wrapper.classes()).not.toContain('db-table__dragging')
 
     const xBefore = table.x
-    fireMouseEvent(containerRef, 'mousemove', { offsetX: 999, offsetY: 999 })
+    fireMouseEvent(containerRef, 'mousemove', { clientX: 999, clientY: 999 })
     await wrapper.vm.$nextTick()
     expect(table.x).toBe(xBefore) // drag() listener was removed on drop
   })
