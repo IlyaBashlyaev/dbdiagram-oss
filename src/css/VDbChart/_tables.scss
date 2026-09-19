@@ -56,6 +56,10 @@
     //stroke: var(--table-highlight-stroke-color);
   }
 
+  &__selected {
+    outline-color: var(--table-highlight-stroke-color, #3ea8de);
+  }
+
   &__highlight {
     position: relative;
 

@@ -107,6 +107,13 @@
 
   }
 
+  .db-chart__selection-box {
+    fill: rgba(62, 168, 222, 0.15);
+    stroke: var(--table-highlight-stroke-color, #3ea8de);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
 
   .db-table, .db-field {
     &-tooltip {

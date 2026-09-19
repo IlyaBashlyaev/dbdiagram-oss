@@ -33,6 +33,8 @@ export const useChartStore = defineStore("chart", {
       divisions: 10,
       snap: 5
     },
+    selectedTables: {},
+    groupDragActive: false,
     loaded: false,
     tooltip: {
       x: 0,
@@ -97,6 +99,12 @@ export const useChartStore = defineStore("chart", {
     },
     getTableGroups(){
       return this.tableGroups;
+    },
+    isTableSelected(state) {
+      return (tableId) => !!state.selectedTables[tableId];
+    },
+    selectedTableIds(state) {
+      return Object.keys(state.selectedTables).map(Number);
     },
     getTable(state) {
       return (tableId,schema,tablename) => {
@@ -462,8 +470,17 @@ export const useChartStore = defineStore("chart", {
     updateRef(refId, newRef) {
       this.$patch({
         refs:{ [refId]: newRef}
-       
+
       });
+    },
+    setSelectedTables(ids) {
+      this.selectedTables = Object.fromEntries(ids.map((id) => [id, true]));
+    },
+    clearSelectedTables() {
+      this.selectedTables = {};
+    },
+    setGroupDragActive(active) {
+      this.groupDragActive = active;
     }
   }
 });

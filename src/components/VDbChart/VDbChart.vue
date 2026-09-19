@@ -35,7 +35,7 @@
 
     <g id="background-layer">
       <rect ref="bgRef" class="db-chart__bg"
-            @mousedown="panZoom.enablePan()"
+            @mousedown="onBgMouseDown"
             @mouseup="panZoom.disablePan()"
             @touchend="panZoom.disablePan()"
       />
@@ -85,6 +85,14 @@
                     @mouseleave.passive="onTableMouseLeave"
         />
        
+      </g>
+      <g id="selection-layer" v-if="selecting">
+        <rect class="db-chart__selection-box"
+              :x="selectionBox.x"
+              :y="selectionBox.y"
+              :width="selectionBox.width"
+              :height="selectionBox.height"
+        />
       </g>
       <g id="overlays-layer"
          v-if="store.loaded">
@@ -140,7 +148,7 @@
 </template>
 
 <script setup>
-  import { computed, nextTick, onMounted, reactive, ref, watch, watchEffect } from 'vue'
+  import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, watchEffect } from 'vue'
   import VDbTable from './VDbTable'
   import VDbRef from './VDbRef'
   import svgPanZoom, { pan } from 'svg-pan-zoom'
@@ -220,6 +228,80 @@
     y: 0
   },)
   let initialized = false
+
+  // Rubber-band multi-select on the empty canvas. Panning by dragging the
+  // background is kept, but only while Space is held, since a plain drag
+  // now draws the selection box instead.
+  const spacePressed = ref(false)
+  const selecting = ref(false)
+  const selectionStart = reactive({ x: 0, y: 0 })
+  const selectionBox = reactive({ x: 0, y: 0, width: 0, height: 0 })
+
+  const onSpaceKeyDown = (e) => {
+    if (e.code === 'Space') spacePressed.value = true
+  }
+  const onSpaceKeyUp = (e) => {
+    if (e.code === 'Space') spacePressed.value = false
+  }
+
+  const chartPoint = (clientX, clientY) => {
+    const rect = root.value.getBoundingClientRect()
+    return store.inverseCtm.transformPoint({
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    })
+  }
+
+  const onBgMouseDown = (e) => {
+    if (spacePressed.value) {
+      panZoom.value.enablePan()
+      return
+    }
+
+    store.clearSelectedTables()
+
+    const p = chartPoint(e.clientX, e.clientY)
+    selectionStart.x = p.x
+    selectionStart.y = p.y
+    selectionBox.x = p.x
+    selectionBox.y = p.y
+    selectionBox.width = 0
+    selectionBox.height = 0
+    selecting.value = true
+
+    root.value.addEventListener('mousemove', onSelectionMove, { passive: true })
+    root.value.addEventListener('mouseup', onSelectionEnd, { passive: true })
+  }
+
+  const onSelectionMove = (e) => {
+    const p = chartPoint(e.clientX, e.clientY)
+    selectionBox.x = Math.min(selectionStart.x, p.x)
+    selectionBox.y = Math.min(selectionStart.y, p.y)
+    selectionBox.width = Math.abs(p.x - selectionStart.x)
+    selectionBox.height = Math.abs(p.y - selectionStart.y)
+  }
+
+  // A table counts as "inside" the selection window only when its whole
+  // bounding box, borders included, fits within the drawn rectangle.
+  const onSelectionEnd = () => {
+    selecting.value = false
+    root.value.removeEventListener('mousemove', onSelectionMove, { passive: true })
+    root.value.removeEventListener('mouseup', onSelectionEnd, { passive: true })
+
+    const selectedIds = props.tables
+      .filter((table) => {
+        const s = store.getTable(table.id, table.schema.name, table.name)
+        return s.x >= selectionBox.x &&
+          s.y >= selectionBox.y &&
+          (s.x + s.width) <= (selectionBox.x + selectionBox.width) &&
+          (s.y + s.height) <= (selectionBox.y + selectionBox.height)
+      })
+      .map((table) => table.id)
+
+    store.setSelectedTables(selectedIds)
+    selectionBox.width = 0
+    selectionBox.height = 0
+  }
 
   const updateCursorPosition = (e) => {
     const p = store.inverseCtm.transformPoint({
@@ -340,6 +422,14 @@
       panZoom.value.setOnUpdatedCTM((newCTM) => updateCTM(newCTM))
     })
     initialized = true
+
+    window.addEventListener('keydown', onSpaceKeyDown)
+    window.addEventListener('keyup', onSpaceKeyUp)
+  })
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onSpaceKeyDown)
+    window.removeEventListener('keyup', onSpaceKeyUp)
   })
 
   watch(() => props.tables, () => {

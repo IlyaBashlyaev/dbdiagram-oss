@@ -104,6 +104,99 @@ describe('drag-and-drop', () => {
   })
 })
 
+describe('multi-selection group drag', () => {
+  function mountTwoTables() {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useChartStore()
+    store.inverseCtm = { transformPoint: ({ x, y }) => ({ x, y }) }
+
+    const containerRef = document.createElement('div')
+    containerRef.createSVGPoint = () => ({})
+    containerRef.getBoundingClientRect = () => ({ left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 })
+
+    const table1 = store.getTable(1, 'public', 'users')
+    const table2 = store.getTable(2, 'public', 'orders')
+    // startGroupDrag looks each selected table up via tablesDict, the way
+    // loadDatabase() populates it for every real table on load
+    store.tablesDict = {
+      1: { schema: 'public', name: 'users' },
+      2: { schema: 'public', name: 'orders' }
+    }
+
+    const mountOne = (id, name, fields = []) => mount(VDbTable, {
+      props: { id, name, schema: { name: 'public' }, fields, indexes: [], containerRef, useSchema: false },
+      global: { plugins: [pinia], directives: { 'touch-hold': {} } }
+    })
+
+    const wrapper1 = mountOne(1, 'users')
+    const wrapper2 = mountOne(2, 'orders')
+
+    return { store, containerRef, table1, table2, wrapper1, wrapper2 }
+  }
+
+  it('only tables fully inside the selection get selected', () => {
+    const { store, table1, table2 } = mountTwoTables()
+    table1.x = 0; table1.y = 0; table1.width = 100; table1.height = 50
+    table2.x = 500; table2.y = 500; table2.width = 100; table2.height = 50
+
+    store.setSelectedTables([1])
+    expect(store.isTableSelected(1)).toBe(true)
+    expect(store.isTableSelected(2)).toBe(false)
+
+    store.clearSelectedTables()
+    expect(store.selectedTableIds).toEqual([])
+  })
+
+  it('moves every selected table by the same delta, leaving unselected tables untouched', async () => {
+    const { store, containerRef, table1, table2, wrapper1 } = mountTwoTables()
+    table1.x = 100; table1.y = 100
+    table2.x = 300; table2.y = 300
+    store.setSelectedTables([1, 2])
+    await wrapper1.vm.$nextTick()
+
+    expect(wrapper1.classes()).toContain('db-table__selected')
+
+    // mousedown inside the (selected) table-1 svg root starts the group drag
+    fireMouseEvent(wrapper1.find('#table-1').element, 'mousedown', { clientX: 120, clientY: 120 })
+    await wrapper1.vm.$nextTick()
+    expect(wrapper1.classes()).toContain('db-table__dragging')
+
+    fireMouseEvent(containerRef, 'mousemove', { clientX: 150, clientY: 170 })
+    await wrapper1.vm.$nextTick()
+
+    expect(table1.x).toBe(130) // +30
+    expect(table1.y).toBe(150) // +50
+    expect(table2.x).toBe(330) // same delta applied to the other selected table
+    expect(table2.y).toBe(350)
+
+    fireMouseEvent(containerRef, 'mouseup', {})
+    await wrapper1.vm.$nextTick()
+
+    expect(store.groupDragActive).toBe(false)
+    expect(store.isTableSelected(1)).toBe(true) // selection survives mouseup
+    expect(store.isTableSelected(2)).toBe(true)
+  })
+
+  it('a header mousedown on a selected table starts a group drag, not a solo drag', async () => {
+    const { store, containerRef, table1, table2, wrapper1 } = mountTwoTables()
+    table1.x = 100; table1.y = 100
+    table2.x = 300; table2.y = 300
+    store.setSelectedTables([1, 2])
+    await wrapper1.vm.$nextTick()
+
+    // the mousedown bubbles from the header up through the table's svg root,
+    // where startDrag() bails out (selected) and onTableMouseDown() takes
+    // over instead, moving the whole selection together
+    fireMouseEvent(wrapper1.find('.db-table-header').element, 'mousedown', { clientX: 120, clientY: 120 })
+    fireMouseEvent(containerRef, 'mousemove', { clientX: 140, clientY: 130 })
+    await wrapper1.vm.$nextTick()
+
+    expect(table1.x).toBe(120)
+    expect(table2.x).toBe(320) // moved together with table1
+  })
+})
+
 describe('coordinate changes reflect on the svg element', () => {
   it('updates x/y attributes when the store table is mutated directly', async () => {
     const { wrapper, table } = mountTable()

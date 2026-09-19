@@ -5,7 +5,8 @@
     :class="{
       'db-table':true,
       'db-table__highlight': highlight,
-      'db-table__dragging': dragging
+      'db-table__dragging': dragging,
+      'db-table__selected': selected
     }"
     :x="state.x"
     :y="state.y"
@@ -13,6 +14,7 @@
     :height="state.height"
     @mouseenter.passive="onMouseEnter"
     @mouseleave.passive="onMouseLeave"
+    @mousedown="onTableMouseDown"
   >
     <rect class="db-table__background"
           :width="state.width"
@@ -155,19 +157,25 @@
   const highlight = ref(false)
   const palette_icon = ref(false)
   const tooltip = ref(false)
-  const dragging = ref(false)
+  const soloDragging = ref(false)
   const dragOffsetX = ref(null)
   const dragOffsetY = ref(null)
   const dragOffset = ref(null)
   const gridSize = store.subGridSize;
   const gridSnap = store.grid.snap;
 
+  const selected = computed(() => store.isTableSelected(props.id))
+  // While this table is part of a multi-selection being moved together,
+  // every selected table shows the dragging state, not just the one
+  // whose handle was actually grabbed.
+  const dragging = computed(() => soloDragging.value || (selected.value && store.groupDragActive))
+
   const onMouseEnter = (e) => {
     highlight.value = true
   }
   const onMouseLeave = (e) => {
     highlight.value = false
-    dragging.value = false
+    soloDragging.value = false
   }
 
   // clientX/clientY are viewport-relative and stable regardless of which
@@ -194,7 +202,7 @@
 
   }
   const drop = (e) => {
-    dragging.value = false
+    soloDragging.value = false
     highlight.value = false
 
     dragOffsetX.value = null
@@ -207,8 +215,12 @@
     clientX,
     clientY
   }) => {
+    // A selected table is moved together with the rest of the selection
+    // (see onTableMouseDown/startGroupDrag) instead of dragging alone.
+    if (selected.value) return
+
     console.log(`Click. Table ${props.id}`)
-    dragging.value = true
+    soloDragging.value = true
 
     const p = store.inverseCtm.transformPoint(containerPoint(clientX, clientY))
     dragOffsetX.value = p.x - state.value.x
@@ -218,6 +230,48 @@
     props.containerRef.addEventListener('mousemove', drag, { passive: true })
     props.containerRef.addEventListener('mouseup', drop, { passive: true })
     props.containerRef.addEventListener('mouseleave', onMouseLeave, { passive: true })
+  }
+
+  // Multi-selection drag: mousedown anywhere inside a selected table moves
+  // every currently selected table together, relative to the mouse.
+  const groupDragStart = ref(null)
+  const groupDragTables = ref(null)
+
+  const onTableMouseDown = (e) => {
+    if (!selected.value) return
+    startGroupDrag(e)
+  }
+
+  const groupDrag = ({ clientX, clientY }) => {
+    const p = store.inverseCtm.transformPoint(containerPoint(clientX, clientY))
+    const dx = p.x - groupDragStart.value.x
+    const dy = p.y - groupDragStart.value.y
+    for (const entry of groupDragTables.value) {
+      const s = store.getTable(entry.id, entry.schema, entry.name)
+      s.x = snap(entry.startX + dx, gridSnap)
+      s.y = snap(entry.startY + dy, gridSnap)
+    }
+  }
+
+  const endGroupDrag = () => {
+    store.setGroupDragActive(false)
+    groupDragStart.value = null
+    groupDragTables.value = null
+    props.containerRef.removeEventListener('mousemove', groupDrag, { passive: true })
+    props.containerRef.removeEventListener('mouseup', endGroupDrag, { passive: true })
+  }
+
+  const startGroupDrag = ({ clientX, clientY }) => {
+    groupDragStart.value = store.inverseCtm.transformPoint(containerPoint(clientX, clientY))
+    groupDragTables.value = store.selectedTableIds.map((id) => {
+      const { schema, name } = store.tablesDict[id]
+      const s = store.getTable(id, schema, name)
+      return { id, schema, name, startX: s.x, startY: s.y }
+    })
+    store.setGroupDragActive(true)
+
+    props.containerRef.addEventListener('mousemove', groupDrag, { passive: true })
+    props.containerRef.addEventListener('mouseup', endGroupDrag, { passive: true })
   }
 
   const showTooltip = () => {
