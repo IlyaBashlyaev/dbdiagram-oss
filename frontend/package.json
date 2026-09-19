@@ -12,6 +12,7 @@
     "lint": "eslint --ext .js,.ts,.vue ./",
     "test": "vitest run",
     "test:watch": "vitest",
+    "backend": "cd ../backend && uvicorn main:app --reload --port 8000",
     "deploy": "push-dir --dir=dist/spa --branch=gh-pages"
   },
   "dependencies": {

@@ -1,6 +1,7 @@
 import { debounce, throttle, useQuasar, Dark } from "quasar";
 import { decode, encode, save, load } from "src/utils/storageUtils";
 import { useFilesStore } from "src/store/files";
+import { useStorageSettingsStore } from "src/store/storageSettings";
 
 
 const throttledSave = debounce(save, 150);
@@ -47,6 +48,21 @@ export default ({ store }) => {
   } else if (store.$id === "chart") {
     store.$subscribe((mutation, state) => {
       autoSave();
+    });
+  }
+  else if(store.$id === "storageSettings") {
+    (() => {
+      const storageSettings = load("storageSettings") || {};
+      store.$patch({
+        mode: storageSettings.mode || "local",
+        fileBackendUrl: storageSettings.fileBackendUrl || "http://localhost:8000"
+      });
+    })();
+
+    store.$subscribe((mutation) => {
+      if (mutation.storeId === "storageSettings") {
+        throttledSave("storageSettings", store.save);
+      }
     });
   }
   else if(store.$id === "files") {
