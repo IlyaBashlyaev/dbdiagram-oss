@@ -229,19 +229,18 @@
   },)
   let initialized = false
 
-  // Rubber-band multi-select on the empty canvas. Panning by dragging the
-  // background is kept, but only while Space is held, since a plain drag
-  // now draws the selection box instead.
-  const spacePressed = ref(false)
+  // Rubber-band multi-select on the empty canvas, held on Shift. A plain
+  // mousedown-drag on the background just pans the canvas, as before.
+  const shiftPressed = ref(false)
   const selecting = ref(false)
   const selectionStart = reactive({ x: 0, y: 0 })
   const selectionBox = reactive({ x: 0, y: 0, width: 0, height: 0 })
 
-  const onSpaceKeyDown = (e) => {
-    if (e.code === 'Space') spacePressed.value = true
+  const onShiftKeyDown = (e) => {
+    if (e.key === 'Shift') shiftPressed.value = true
   }
-  const onSpaceKeyUp = (e) => {
-    if (e.code === 'Space') spacePressed.value = false
+  const onShiftKeyUp = (e) => {
+    if (e.key === 'Shift') shiftPressed.value = false
   }
 
   const chartPoint = (clientX, clientY) => {
@@ -253,7 +252,7 @@
   }
 
   const onBgMouseDown = (e) => {
-    if (spacePressed.value) {
+    if (!shiftPressed.value) {
       panZoom.value.enablePan()
       return
     }
@@ -423,13 +422,13 @@
     })
     initialized = true
 
-    window.addEventListener('keydown', onSpaceKeyDown)
-    window.addEventListener('keyup', onSpaceKeyUp)
+    window.addEventListener('keydown', onShiftKeyDown)
+    window.addEventListener('keyup', onShiftKeyUp)
   })
 
   onBeforeUnmount(() => {
-    window.removeEventListener('keydown', onSpaceKeyDown)
-    window.removeEventListener('keyup', onSpaceKeyUp)
+    window.removeEventListener('keydown', onShiftKeyDown)
+    window.removeEventListener('keyup', onShiftKeyUp)
   })
 
   watch(() => props.tables, () => {
