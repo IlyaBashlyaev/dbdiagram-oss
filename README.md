@@ -3,6 +3,26 @@
 
 An Open Source alternative to dbdiagram.io, aiming to have the same basic features+more. Motivation behind the project was that $9/month overpriced subscription for just some **very VERY** basic features. (dark mode/header colours/table groups)
 
+---
+
+## Run Commands
+
+### Frontend (Vue)
+
+```
+cd frontend
+npm run dev
+```
+
+### Backend (FastAPI)
+
+```
+cd backend
+uvicorn main:app --reload --port 8000
+```
+
+---
+
 ## Forked Info
 
 #### Actual docker version: 2.4.2
@@ -46,6 +66,8 @@ An Open Source alternative to dbdiagram.io, aiming to have the same basic featur
 + 25. Added export to DBML, SQL (Postgres, MSSQL, MySQL)
 + 26. Added import from SQL (Postgres)
 
+---
+
 ## Installation
 
 ### Install the dependencies
@@ -71,37 +93,37 @@ quasar build
 ### Customize the configuration
 See [Configuring quasar.conf.js](https://quasar.dev/quasar-cli/quasar-conf-js).
 
+---
+
 ## Architecture - Solution
 
-![Arch](https://raw.githubusercontent.com/NomadRazor/dbdiagram-oss-wrep/master/.github/media/arch.png)
+![Arch](https://raw.githubusercontent.com/IlyaBashlyaev/dbdiagram-oss/master/.github/media/arch.png)
+
+---
 
 ## Repository settings demo
 
 https://github.com/NomadRazor/dbdiagram-oss-wrep/assets/36404538/d7893336-13b5-431a-97d1-2cddc6073aec
 
+---
+
 ## Tooltips demo
 
 https://github.com/NomadRazor/dbdiagram-oss-wrep/assets/36404538/261f2283-af2b-4044-8d98-80d70270ef43
 
-
-## Live Demo
-
-Fork demo [nomadrazor.github.io/dbdiagram-oss-wrep](https://nomadrazor.github.io/dbdiagram-oss-wrep/)
-
-View the latest master branch at [trudan.github.io/dbdiagram-oss](https://trudan.github.io/dbdiagram-oss/)
-
-
-
+---
 
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
 
+---
 
 ## Screenshots
 
 ![Demo GIF](https://raw.githubusercontent.com/TruDan/dbdiagram-oss/master/.github/media/demo.gif)
 
+---
 
 ## Related
 
@@ -114,5 +136,3 @@ View the latest master branch at [trudan.github.io/dbdiagram-oss](https://trudan
 [dbdiagram.io](https://dbdiagram.io/home) - Original DBDiagram tool
 
 [dbdocs.io](https://dbdocs.io/) - Documentation generator for DBML
-
-
