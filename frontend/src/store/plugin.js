@@ -55,7 +55,7 @@ export default ({ store }) => {
       const storageSettings = load("storageSettings") || {};
       store.$patch({
         mode: storageSettings.mode || "local",
-        fileBackendUrl: storageSettings.fileBackendUrl || "/api"
+        fileBackendUrl: storageSettings.fileBackendUrl || "http://localhost:8000"
       });
     })();
 

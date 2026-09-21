@@ -5,7 +5,7 @@ import { getAdapter } from "src/store/storageAdapters";
 export const useStorageSettingsStore = defineStore("storageSettings", {
   state: () => ({
     mode: "local",
-    fileBackendUrl: "/api",
+    fileBackendUrl: "http://localhost:8000",
     backendReachable: null
   }),
   getters: {

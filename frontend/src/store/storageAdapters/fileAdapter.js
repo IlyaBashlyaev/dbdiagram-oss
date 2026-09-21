@@ -16,19 +16,25 @@ async function request(baseUrl, path, options = {}) {
     throw new Error("File storage server is not reachable");
   }
 
-  if (!response.ok) {
-    let message = `File storage request failed (${response.status})`;
+  const text = await response.text();
+  let body = null;
+  if (text) {
     try {
-      const body = await response.json();
-      if (body && body.detail) message = body.detail;
+      body = JSON.parse(text);
     } catch (e) {
-      // response body wasn't JSON, keep the generic message
+      // Not JSON - most likely the URL points at something other than the
+      // file-storage API (e.g. a static-file server returning an HTML page),
+      // so surface a friendly message instead of the raw parse error.
+      throw new Error("File storage server is not reachable");
     }
+  }
+
+  if (!response.ok) {
+    const message = (body && body.detail) || `File storage request failed (${response.status})`;
     throw new Error(message);
   }
 
-  if (response.status === 204) return null;
-  return response.json();
+  return body;
 }
 
 export function createFileAdapter(baseUrl) {
