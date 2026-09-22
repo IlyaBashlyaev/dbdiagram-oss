@@ -11,9 +11,14 @@ An Open Source alternative to dbdiagram.io, aiming to have the same basic featur
 2. Backend: `FastAPI` (Python)
 3. Orchestration: `Docker Compose`
 
-### Command
+### Start containers
 ```
 docker compose up -d
+```
+
+### Get URLs (frontend & backend)
+```
+docker compose run urls
 ```
 
 ---
