@@ -60,63 +60,7 @@
       size="md"
       color="secondary"
       class="q-mx-xs"
-      @show="repo.getRepoFiles"
-      
-    >
-      <template #label>
-        <q-icon
-        class="q-mr-sm"
-        size="sm"
-        name="cloud_upload"/>
-        to repo
-      </template>
-      <q-list dense>
-        <q-item v-for="rf of repo.getFolders" :key="rf"
-                clickable
-                v-close-popup
-                @click="()=>uploadToRepo(rf)"
-        >
-          <q-item-section>
-            <q-item-label>{{ rf }}</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-btn-dropdown>
 
-    <q-btn-dropdown
-      padding="xs sm"
-      size="md"
-      color="secondary"
-      class="q-mx-xs"
-      @show="repo.getRepoFiles"
-      
-    >
-      <template #label>
-        <q-icon
-          class="q-mr-sm"
-          size="sm"
-          name="cloud_download"/>
-        from repo
-      </template>
-      <q-list dense>
-        <q-item v-for="rf of repoFiles" :key="rf"
-                clickable
-                v-close-popup
-                @click="()=>downloadFromRepo(rf)"
-        >
-          <q-item-section>
-            <q-item-label>{{ rf }}</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-btn-dropdown>
-
-    <q-btn-dropdown
-      padding="xs sm"
-      size="md"
-      color="secondary"
-      class="q-mx-xs"
-      
     >
       <template #label>
         <q-icon
@@ -162,6 +106,64 @@
         >
           <q-item-section>
             <q-item-label>{{ importOption.label }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
+
+    <q-btn-dropdown
+      padding="xs sm"
+      size="md"
+      color="secondary"
+      class="q-mx-xs"
+      v-show="repo.enabled"
+      @show="repo.getRepoFiles"
+
+    >
+      <template #label>
+        <q-icon
+        class="q-mr-sm"
+        size="sm"
+        name="cloud_upload"/>
+        to repo
+      </template>
+      <q-list dense>
+        <q-item v-for="rf of repo.getFolders" :key="rf"
+                clickable
+                v-close-popup
+                @click="()=>uploadToRepo(rf)"
+        >
+          <q-item-section>
+            <q-item-label>{{ rf }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
+
+    <q-btn-dropdown
+      padding="xs sm"
+      size="md"
+      color="secondary"
+      class="q-mx-xs"
+      v-show="repo.enabled"
+      @show="repo.getRepoFiles"
+
+    >
+      <template #label>
+        <q-icon
+          class="q-mr-sm"
+          size="sm"
+          name="cloud_download"/>
+        from repo
+      </template>
+      <q-list dense>
+        <q-item v-for="rf of repoFiles" :key="rf"
+                clickable
+                v-close-popup
+                @click="()=>downloadFromRepo(rf)"
+        >
+          <q-item-section>
+            <q-item-label>{{ rf }}</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -223,7 +225,9 @@ onMounted(()=>{
     console.log('load from repository');
     repo.loadRepoConfig();
     setTimeout(()=>{
-      repo.getRepoFiles();
+      if (repo.enabled) {
+        repo.getRepoFiles();
+      }
     },500);
 },300);
 });

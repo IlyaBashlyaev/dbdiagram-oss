@@ -18,6 +18,7 @@ const filesfs = localforage.createInstance({
 
 export const useRepoStore = defineStore("repo", {
   state: () => ({
+    enabled: false,
     host : "",
     bucket: "",
     path: "",
@@ -25,10 +26,13 @@ export const useRepoStore = defineStore("repo", {
     access_key: "",
     secret_key: "",
     files : []
-    
+
     }
   ),
   getters: {
+    isEnabled(state){
+        return state.enabled;
+    },
     getHost(state){
         return state.host;
     },
@@ -55,6 +59,7 @@ export const useRepoStore = defineStore("repo", {
     
     save(state) {
       return {
+        enabled: state.enabled,
         host: state.host,
         bucket: state.bucket,
         region:state.region,
@@ -77,6 +82,7 @@ export const useRepoStore = defineStore("repo", {
     },
     load(data) {
         this.$patch({
+            enabled : data.enabled ?? false,
             host : data.host,
             bucket : data.bucket,
             region: data.region,
@@ -84,8 +90,12 @@ export const useRepoStore = defineStore("repo", {
             access_key : data.access_key,
             secret_key : data.secret_key,
         })
-          
-        
+
+
+      },
+      setEnabled(enabled){
+        this.enabled = enabled;
+        this.saveRepoConfig();
       },
       saveLoadedFiles(err,data){
         console.log(data);

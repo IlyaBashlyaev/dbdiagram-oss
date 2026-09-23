@@ -73,8 +73,15 @@
     <q-separator/>
 
     <div>
-      <div class="text-subtitle1">Repository (S3)     <q-btn class="q-ma-sm" color="purple" label="save" @click="()=>save()"  /></div>
-      <div class="row q-col-gutter-md">
+      <div class="text-subtitle1">
+        Repository (S3)
+        <q-btn class="q-ma-sm" color="purple" label="save" @click="()=>save()"  />
+        <q-checkbox class="q-ml-sm"
+                    v-model="repoEnabled"
+                    label="Enable S3 storage"
+        />
+        </div>
+      <div v-show="repoEnabled" class="row q-col-gutter-md">
         <q-input class="col-md-4 col-lg-3"
                  v-model.trim="repo.host"
                  type="string"
@@ -94,7 +101,7 @@
                  :label="`Comma-separated folders`"
         />
       </div>
-      <div class="row q-col-gutter-x-md">
+      <div v-show="repoEnabled" class="row q-col-gutter-x-md">
         <q-input class="col-md-4 col-lg-3"
                  v-model.trim="repo.region"
                  type="string"
@@ -113,7 +120,7 @@
                  stack-label
                  :label="`Secret_key`"
         />
-        
+
       </div>
   
     </div>
@@ -166,6 +173,11 @@
   const fileBackendUrl = computed({
     get: () => storageSettings.fileBackendUrl,
     set: (url) => storageSettings.setFileBackendUrl(url)
+  });
+
+  const repoEnabled = computed({
+    get: () => repo.enabled,
+    set: (enabled) => repo.setEnabled(enabled)
   });
 
   function testConnection() {

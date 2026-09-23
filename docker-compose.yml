@@ -4,7 +4,7 @@ services:
       context: ./backend
     container_name: dbdiagram-oss-backend
     ports:
-      - "8000-9000:8000"
+      - "8000:8000"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -14,7 +14,7 @@ services:
       context: ./frontend
     container_name: dbdiagram-oss-frontend
     ports:
-      - "3000-4000:80"
+      - "3210:80"
     depends_on:
       - backend
     restart: unless-stopped
