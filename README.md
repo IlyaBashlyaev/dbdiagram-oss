@@ -51,7 +51,7 @@ The honest trade-off: dbdiagram-oss gives up vendor support, a polished account 
 2. Backend: `FastAPI` (Python)
 3. Orchestration: `Docker Compose`
 
-For the Docker setup you need Docker Engine (or Docker Desktop) with the Compose plugin (`docker compose version` should work). To build the frontend you additionally need Node.js and npm on the host, see the note in step 2.
+For the Docker setup you need Docker Engine (or Docker Desktop) with the Compose plugin (`docker compose version` should work). Node.js and Python are not needed on the host, because the frontend is compiled inside the image build.
 
 ### Run with Docker (detailed)
 
@@ -62,22 +62,13 @@ git clone https://github.com/TruDan/dbdiagram-oss.git
 cd dbdiagram-oss
 ```
 
-2. Build the frontend once on the host. The frontend image does not compile the Vue app itself: its `Dockerfile` copies the prebuilt `frontend/dist/spa` folder into an Nginx image, so this folder must exist before `docker compose` builds the image.
-
-```
-cd frontend
-npm install
-npm run build
-cd ..
-```
-
-3. Build the images and start the containers in the background.
+2. Build the images and start the containers in the background. The frontend image is built in two stages: the Vue app is compiled in a Node container and the result is served by Nginx. The first build takes a few minutes.
 
 ```
 docker compose up -d --build
 ```
 
-4. Print the addresses of the running services.
+3. Print the addresses of the running services.
 
 ```
 docker compose run --rm urls
@@ -85,7 +76,7 @@ docker compose run --rm urls
 
 By the compose file the services are published as follows: the frontend (Nginx) on `http://localhost:3210` and the backend (FastAPI) on `http://localhost:8000`. The `urls` helper is in the `tools` profile, so it is not started by `up`; it only reads the published ports from the Docker socket and prints them.
 
-5. Check the backend.
+4. Check the backend.
 
 ```
 curl http://localhost:8000/health
@@ -93,7 +84,7 @@ curl http://localhost:8000/health
 
 The expected answer is `{"status":"ok"}`.
 
-6. Open the frontend address in the browser. To save diagrams as files, open Settings -> General -> Storage and choose the file storage mode. The backend writes them to the `data/` folder in the project root, which is mounted into the backend container as `/app/data` and is ignored by Git.
+5. Open the frontend address in the browser. To save diagrams as files, open Settings -> General -> Storage and choose the file storage mode. The backend writes them to the `data/` folder in the project root, which is mounted into the backend container as `/app/data` and is ignored by Git.
 
 Useful commands:
 
@@ -101,14 +92,13 @@ Useful commands:
 docker compose ps            # state of the containers
 docker compose logs -f       # follow the logs
 docker compose down          # stop and remove the containers (data/ is kept)
-docker compose up -d --build # rebuild after code changes (rebuild frontend/dist/spa first for UI changes)
+docker compose up -d --build # rebuild after code changes
 ```
 
 Known limitations of the current Docker setup:
 
 1. The backend only accepts browser requests from `localhost` or `127.0.0.1` origins (CORS), so the file storage mode works only when the frontend is opened through one of these host names.
-2. The frontend Nginx configuration still contains the original `server_name` and web root of the upstream author's server. It works because it is the only server block in the container, but it should be cleaned up before public use.
-3. The `urls` helper needs access to `/var/run/docker.sock`, so it works only where this socket is available.
+2. The `urls` helper needs access to `/var/run/docker.sock`, so it works only where this socket is available.
 
 ### Run without Docker (NPM and Uvicorn)
 

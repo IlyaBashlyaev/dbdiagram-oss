@@ -1,9 +1,16 @@
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --legacy-peer-deps
+
+COPY . .
+RUN npm run build
+
 FROM nginx:alpine
 
-ENV NODE_EVN=production
-
-COPY nginx/default.conf /etc/nginx/conf.d/
-RUN rm -rf /home/user/dbdiagram-oss-wrep.nmdrzr.com/public/*
-COPY /dist/spa /home/user/dbdiagram-oss-wrep.nmdrzr.com/public/
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist/spa /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]

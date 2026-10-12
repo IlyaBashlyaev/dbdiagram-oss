@@ -39,20 +39,17 @@ The frontend can store diagrams in three places, selected in Settings -> General
 
 Installation steps:
 
-1. Install Docker with the Compose plugin and Node.js with npm.
-2. Build the frontend on the host with `cd frontend && npm install && npm run build`. This step is required because `frontend/Dockerfile` only copies the existing `frontend/dist/spa` folder; it does not run the build itself, and `docker compose up` fails if the folder is missing.
-3. Run `docker compose up -d --build` in the project root.
-4. Run `docker compose run --rm urls` to print the frontend and backend addresses, or read them from `docker-compose.yml`.
-5. Open the frontend address, and optionally check `http://localhost:8000/health`.
+1. Install Docker with the Compose plugin. Node.js is not needed on the host.
+2. Run `docker compose up -d --build` in the project root. `frontend/Dockerfile` is a two-stage build: a `node:18-alpine` stage runs `npm ci --legacy-peer-deps` and `npm run build`, and the resulting `dist/spa` is copied into `nginx:alpine` (`/usr/share/nginx/html`). The `--legacy-peer-deps` flag is needed because the dependency tree has a peer conflict (`vite` wants a newer `sass` than `@quasar/app-webpack` pins).
+3. Run `docker compose run --rm urls` to print the frontend and backend addresses, or read them from `docker-compose.yml`.
+4. Open the frontend address, and optionally check `http://localhost:8000/health`.
 
 Stop the environment with `docker compose down`. The `data/` folder is not removed.
 
-Known issues found while preparing this document, based on the repository state at commit `a638501`:
+Known issues found while preparing this document, based on the repository state at commit `a638501` (the earlier frontend build failure and the leftover upstream Nginx paths were fixed afterwards):
 
-1. The frontend image requires a manual host build of the Vue app. A multi-stage Dockerfile would remove this step.
-2. `frontend/nginx/default.conf` and `frontend/Dockerfile` still use the web root and `server_name` of the original upstream deployment (`/home/user/dbdiagram-oss-wrep.nmdrzr.com/public`). They work inside the container but are misleading.
-3. The commit messages mention a dynamic port allocation and a move of the frontend port to `8080`, but `docker-compose.yml` at this commit publishes the fixed ports `3210` and `8000`. Confirm which behaviour is intended.
-4. `.github/workflows/gh-pages.yaml` still uses `working-directory: web` and Node 16, although the app files were moved from `web/` to `frontend/` in commit `c80178b`. The GitHub Pages deployment will not find the app until the path is updated.
+1. The commit messages mention a dynamic port allocation and a move of the frontend port to `8080`, but `docker-compose.yml` at this commit publishes the fixed ports `3210` and `8000`. Confirm which behaviour is intended.
+2. `.github/workflows/gh-pages.yaml` still uses `working-directory: web` and Node 16, although the app files were moved from `web/` to `frontend/` in commit `c80178b`. The GitHub Pages deployment will not find the app until the path is updated.
 
 ## Local development without Docker
 
